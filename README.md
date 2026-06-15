@@ -84,14 +84,14 @@ source .venv/bin/activate  # Sur macOS/Linux
 pip install -r requirements.txt
 ```
 
-### 3. Exécution du Pipeline
+### 3. Exécution du Pipeline via le Point d'Entrée Unique (`main.py`)
 
 Toutes les commandes doivent être exécutées depuis la racine du projet avec l'environnement virtuel activé.
 
-#### Étape 1 : Ingestion des données historiques
-Exécutez le script d'ingestion historique. Il va créer automatiquement le dataset `raw_trading` et la table `data_trading` dans votre projet BigQuery, puis y injecter les données :
+#### Étape 1 : Ingestion des données historiques dans BigQuery
+Exécutez le point d'entrée avec l'argument d'ingestion historique. Il va peupler votre dataset `raw_trading` :
 ```bash
-python src/ingestion/extract_history.py
+python main.py --ingest-history
 ```
 
 #### Étape 2 : Exécution des transformations dbt
@@ -105,18 +105,20 @@ Pour exécuter les tests de qualité de données dbt :
 ```
 
 #### Étape 3 : Lancement du Dashboard Premium
-Lancez le serveur de développement local Dash :
+Lancez le serveur de développement local Dash via le point d'entrée principal :
 ```bash
-python src/dashboard/app.py
+python main.py --dashboard
+# Ou simplement sans argument :
+python main.py
 ```
 Le tableau de bord est alors accessible sur : **`http://127.0.0.1:8050/`**
 
 ---
 
 ## 📬 Scraping Temps Réel & Alertes
-Le script temps réel scrape Boursorama et pousse les cours en temps réel dans BigQuery. En clôture de séance, il génère le rapport Excel et l'envoie par email :
+Le script de scraping temps réel est également intégré dans le point d'entrée principal. Il scrape Boursorama, injecte les cours dans BigQuery et envoie le rapport de synthèse par email :
 ```bash
-python src/ingestion/extract_realtime.py
+python main.py --ingest-realtime
 ```
 *Note : Assurez-vous d'avoir configuré les paramètres SMTP de votre adresse d'envoi dans `config/mail_config.json`.*
 
