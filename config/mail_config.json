@@ -1,0 +1,7 @@
+{
+    "server" : "smtp.gmail.com",
+    "port" : 587,
+    "sender" : "rpa.trading.symphonie@gmail.com",
+    "reciever": ["formateur_sylvain.boutie@supdevinci-edu.fr","celinahmz@gmail.com","sdk.bmd@gmail.com","sarahassam18@yahoo.com"],
+    "password" : "zkvipofnadkrddlv"
+}

@@ -1,0 +1,23 @@
+version: 2
+
+sources:
+  - name: raw_trading
+    schema: raw_trading
+    tables:
+      - name: data_trading
+        description: "Table contenant les données brutes d'ingestion des actions du CAC40 dans BigQuery."
+        columns:
+          - name: Name
+            description: "Nom de l'entreprise."
+          - name: Open
+            description: "Prix d'ouverture."
+          - name: High
+            description: "Prix le plus haut de la séance."
+          - name: Low
+            description: "Prix le plus bas de la séance."
+          - name: Close
+            description: "Prix de clôture."
+          - name: Volume
+            description: "Volume de transactions."
+          - name: "Date et Heure"
+            description: "Date et heure de l'observation boursière."

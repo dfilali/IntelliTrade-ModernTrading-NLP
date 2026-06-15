@@ -1,0 +1,22 @@
+# Credentials
+config/gcp_service_account.json
+
+# Python Virtual Environment & Cache
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# IDE files
+.idea/
+.vscode/
+.DS_Store
+
+# Data & Output backups
+data/output/
+historical_data_cac40.xlsx
+
+# dbt Artifacts
+dbt_project/target/
+dbt_project/dbt_packages/
+dbt_project/logs/

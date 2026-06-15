@@ -1,0 +1,24 @@
+version: 2
+
+models:
+  - name: mart_financial_features
+    description: "Table finale contenant les données boursières nettoyées et enrichies d'indicateurs financiers."
+    columns:
+      - name: company_name
+        description: "Nom de l'entreprise (ex. TotalEnergies, LVMH, etc.)"
+        tests:
+          - not_null
+      - name: date_et_heure
+        description: "Date et heure de l'observation boursière."
+        tests:
+          - not_null
+      - name: close_price
+        description: "Prix de clôture de l'action."
+      - name: sma_5
+        description: "Moyenne mobile simple sur 5 périodes."
+      - name: sma_20
+        description: "Moyenne mobile simple sur 20 périodes."
+      - name: daily_return
+        description: "Rendement journalier/périodique de l'action."
+      - name: volume_sma_5
+        description: "Moyenne mobile simple du volume de transactions sur 5 périodes."

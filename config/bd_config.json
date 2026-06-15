@@ -1,0 +1,7 @@
+{
+    "database": "projetbourse_trading",
+    "user": "projetbourse_",
+    "password": "SSDC2024",
+    "host": "postgresql-projetbourse.alwaysdata.net",
+    "port": "5432"
+}
