@@ -1,45 +1,71 @@
 # IntelliTrade - Modern Trading & NLP Stack on GCP (CAC 40)
 
-IntelliTrade est une plateforme moderne de traitement de données boursières, d'analyse prédictive et d'intelligence NLP pour l'indice CAC 40. Le projet a été migré d'une architecture locale vers une architecture moderne serverless sur **Google Cloud Platform (GCP)** utilisant **Google BigQuery** et **dbt-bigquery**.
+IntelliTrade est une plateforme moderne de traitement de données boursières, d'analyse prédictive et d'intelligence NLP pour l'indice CAC 40. Le projet implémente une architecture de **Data Lake / Data Warehouse serverless** sur **Google Cloud Platform (GCP)** utilisant **Google Cloud Storage (GCS)**, **Google BigQuery** et **dbt-bigquery**.
 
 ---
 
-## 🏗️ Stack Technique & Architecture GCP
+## 🏗️ Architecture Data Lake / Data Warehouse sur GCP
 
-Le projet s'articule autour d'un pipeline de données moderne et d'un entrepôt de données serverless dans le cloud :
+Le projet met en œuvre un pipeline de données ELT moderne et robuste, conçu pour la scalabilité et l'analyse avancée :
 
 ```mermaid
-graph TD
-    A[yfinance API / Boursorama Scraping] -->|Python Ingestion| B[(GCP BigQuery: raw_trading)]
-    B -->|dbt-bigquery| C[(GCP BigQuery: public)]
-    C -->|SQL Queries| D[Dash Web Application]
-    D -->|Machine Learning| E[Prophet / ARIMA / Sklearn]
-    D -->|NLP Sentiment| F[Bloomberg News Feed & Quant recommendation]
+flowchart TD
+    subgraph Sources [Sources de Données]
+        A[yfinance API]
+        B[Boursorama Web Scraping]
+    end
+
+    subgraph Data_Lake [GCP Data Lake]
+        C[(Google Cloud Storage)]
+    end
+
+    subgraph Data_Warehouse [GCP Data Warehouse - BigQuery]
+        D[(Dataset: raw_trading)]
+        E[(Dataset: public)]
+    end
+
+    subgraph Analytics_IA [Couche Analytics & IA]
+        F[Application Web Dash]
+        G[Machine Learning: Prophet / ARIMA]
+        H[NLP: Analyse de Sentiments]
+    end
+
+    A & B -->|Python Ingestion| C
+    C -->|Chargement / Tables Externes| D
+    D -->|Transformations dbt-bigquery| E
+    E -->|Requêtes SQL| F
+    F --> G
+    F --> H
 ```
 
-1. **Ingestion Cloud-Ready (`src/ingestion/`)** :
-   - `extract_history.py` : Télécharge 2 ans d'historique de cours horaires pour les actions du CAC 40 via l'API `yfinance` et les insère dans BigQuery (`raw_trading.data_trading`).
-   - `extract_realtime.py` : Scrape Boursorama en temps réel pendant les heures de marché, écrit un rapport Excel quotidien et l'envoie par email avec des indicateurs de synthèse.
-2. **Entrepôt de Données & Transformations (`dbt_project/`)** :
-   - **Google BigQuery** : Entrepôt de données analytiques serverless stockant les données brutes et les tables d'analyse.
-   - **dbt-bigquery** : Nettoie, dédouble et enrichit les données boursières directement sur BigQuery, matérialisant le modèle `public.mart_financial_features` (calcul des moyennes mobiles SMA 5, SMA 20 et des rendements périodiques).
-3. **Dashboard Premium & IA (`src/dashboard/`)** :
-   - **Dash (Plotly)** : Interface utilisateur premium avec un thème sombre moderne et un design en verre (*glassmorphism*).
-   - **Machine Learning** : Modélisation prédictive en temps réel sur les 30 prochains jours (Prophet, Régression Linéaire, ARIMA).
-   - **Sentiment Analysis & NLP** :
-     - Agrégation d'actualités financières et classification de sentiment à l'aide d'un modèle d'analyse lexicale optimisé.
-     - Affichage de la répartition (Donut Chart) et d'un indicateur global ("FORTEMENT HAUSSIER", etc.).
-     - Moteur de recommandation croisant la tendance technique ML et le sentiment NLP pour générer des signaux quantitatifs (Achat Fort, Achat, Vente, Vente Forte, Prudence).
+### Description des Couches de l'Architecture :
+
+1. **Couche Ingestion & Data Lake (GCS)** :
+   - Les scripts d'ingestion Python interrogent l'API `yfinance` pour extraire l'historique et scrappent Boursorama pour le temps réel.
+   - Les données brutes extraites sont stockées au format brut (CSV/JSON/Excel) dans un bucket **Google Cloud Storage** (faisant office de **Data Lake**) pour assurer la traçabilité des données d'origine.
+   - *Scripts associés* : [extract_history.py](file:///Users/filalidhia/Projets/trading_project-main/src/ingestion/extract_history.py) et [extract_realtime.py](file:///Users/filalidhia/Projets/trading_project-main/src/ingestion/extract_realtime.py).
+
+2. **Couche Data Warehouse (Google BigQuery)** :
+   - Les fichiers du Data Lake sont chargés ou montés en tables externes dans le dataset **`raw_trading`** de BigQuery (les données y restent brutes).
+   - Les transformations analytiques et le nettoyage de données sont exécutés au cœur de BigQuery à l'aide de **dbt-bigquery**.
+   - dbt matérialise les tables prêtes pour l'analyse et enrichies d'indicateurs techniques (Moyennes Mobiles SMA 5/20, Rendements Quotidiens) dans le dataset final **`public`** (table `mart_financial_features`).
+   - *Modèles d'analyse* : [stg_data_trading.sql](file:///Users/filalidhia/Projets/trading_project-main/dbt_project/models/staging/stg_data_trading.sql) et [mart_financial_features.sql](file:///Users/filalidhia/Projets/trading_project-main/dbt_project/models/marts/mart_financial_features.sql).
+
+3. **Couche Restitution & IA (Dash, ML & NLP)** :
+   - L'application **Dash (Plotly)** interroge de manière performante le dataset d'analyse BigQuery.
+   - Les modules prédictifs entraînent en temps réel des modèles de séries temporelles (**Prophet**, **ARIMA**, **Régression Linéaire**) pour prédire l'évolution des cours.
+   - Le moteur **NLP** extrait les flux d'actualités et classifie en temps réel le sentiment du marché pour chaque entreprise du CAC 40.
+   - Les deux signaux (ML technique et NLP actualités) convergent dans le module de trading quantitatif pour recommander une action (Achat, Vente, Conservation).
+   - *Application associée* : [app.py](file:///Users/filalidhia/Projets/trading_project-main/src/dashboard/app.py).
 
 ---
 
-## ☁️ Architecture de Déploiement Serverless (Cible)
+## ☁️ Déploiement Cloud Target (Serverless)
 
-Pour exécuter ce projet en production de manière 100% serverless sur GCP :
-- **Ingestion** : Les scripts Python sont packagés dans des conteneurs Docker et déployés en tant que **Cloud Run Jobs**, déclenchés par **Cloud Scheduler** (par exemple toutes les heures pour le temps réel).
-- **Transformations** : Les transformations d'indicateurs financiers sont planifiées via **dbt Cloud** ou exécutées dans un workflow d'orchestration (ex: **Cloud Compose / Airflow** ou **Prefect**).
-- **Entrepôt** : **Google BigQuery** stocke l'historique sans besoin de serveurs ni de maintenance.
-- **Dashboard** : L'interface Dash est déployée sur **Cloud Run**, offrant une scalabilité automatique et une accessibilité mondiale.
+Pour déployer cette architecture en production sur GCP :
+- **Ingestion & Ingestion Temps Réel** : Conteneurisés sous Docker et déployés en tant que **Cloud Run Jobs**, planifiés toutes les heures par **Cloud Scheduler**.
+- **Transformation (dbt)** : Orchestré à l'aide de **dbt Cloud** ou exécuté via un conteneur d'orchestration dans **Google Cloud Composer** (Airflow).
+- **Dashboard** : Hébergé sur **Cloud Run** avec passage à l'échelle automatique (auto-scaling) selon le trafic.
 
 ---
 
